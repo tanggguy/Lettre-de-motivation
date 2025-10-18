@@ -13,4 +13,4 @@
 |
 |-- .env
 |-- config.json
-|-- main.py   
+|-- main.py

@@ -73,8 +73,9 @@ analyser des résultats et proposer des améliorations pertinentes.
 Mes expériences passées, y compris celle de moniteur de voile, m'ont appris à être rigoureux, 
 organisé et à bien communiquer, des qualités essentielles pour travailler efficacement en 
 équipe sur des projets d'envergure. 
-Pratiquant les sports nautiques, je suis particulièrement sensible aux enjeux de la performance 
+Pratiquant les sports nautiques, je suis particulièrement sensible aux enjeux de la performance  
 hydrodynamique. Je suis curieux, force de proposition et très motivé à l'idée de m'investir dans 
+
 un projet qui aura une réelle valeur ajoutée pour votre équipe. 
 
     - Sois concis et va droit au but, en évitant les répétitions inutiles.
