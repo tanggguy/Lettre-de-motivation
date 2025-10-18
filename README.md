@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /generateur_lettre_motivation/
 |
 |-- input/
@@ -15,6 +15,3 @@
 |-- .env
 |-- config.json
 |-- main.py
-=======
-# Lettre-de-motivation
->>>>>>> 68808e2449b03b0763640e68c3c8499785b668d6
