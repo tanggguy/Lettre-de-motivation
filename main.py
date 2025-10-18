@@ -214,7 +214,7 @@ def generate_letter_body(user_profile, job_ad_text, job_info=None):
     - Utilise des exemples concrets tirés du profil du candidat pour illustrer ses compétences
     - Personnalise pour que l'entreprise voie que cette lettre lui est adressée spécifiquement
     - Utilise un langage professionnel simple sans être pompeux
-    - Le ton doit être professionnel, sans tournure de phrase lourde
+    - Le ton doit être professionnel, sans tournure de phrase lourde, le vocabulaire et les expressions doivent etre courantes et fluides. 
     - **IMPORTANT** : Ne génère **UNIQUEMENT** que le corps de la lettre. N'inclus PAS "Cher Monsieur/Madame", l'objet, l'adresse, la date, ou la formule de politesse finale. Commence directement par le premier paragraphe.
     """
 
@@ -296,7 +296,42 @@ def save_job_metadata(job_info, match_info, output_path):
     logging.info(f"💾 Métadonnées sauvegardées : {os.path.basename(metadata_path)}")
 
 
-def create_cover_letter(user_config, job_ad_path, template_content):
+def select_template_by_tone(job_info):
+    """
+    Sélectionne automatiquement le meilleur template selon le ton de l'annonce
+    et le secteur de l'entreprise.
+    """
+    if not job_info:
+        return "lettre_template.tex"  # Template par défaut
+
+    ton = job_info.get("ton_annonce", "").lower()
+    secteur = job_info.get("secteur", "").lower()
+    entreprise = job_info.get("entreprise", "").lower()
+
+    # Règles de sélection
+    # Version 2 (Moderne) pour startups, tech, innovation
+    if any(
+        keyword in ton for keyword in ["startup", "moderne", "innovant", "dynamique"]
+    ):
+        return "lettre_template_moderne.tex"
+
+    if any(
+        keyword in secteur for keyword in ["tech", "digital", "innovation", "software"]
+    ):
+        return "lettre_template_moderne.tex"
+
+    # Version 3 (Minimaliste) pour conseil, finance, luxe
+    if any(keyword in secteur for keyword in ["conseil", "finance", "audit", "banque"]):
+        return "lettre_template_minimaliste.tex"
+
+    if any(keyword in ton for keyword in ["formel", "sobre", "classique", "premium"]):
+        return "lettre_template_minimaliste.tex"
+
+    # Version 1 (Élégante) pour industrie, grandes entreprises (défaut)
+    return "lettre_template_elegant.tex"
+
+
+def create_cover_letter(user_config, job_ad_path, templates_dict):
     """Orchestre la création d'une lettre de motivation pour une annonce."""
 
     # Lecture de l'annonce
@@ -305,6 +340,12 @@ def create_cover_letter(user_config, job_ad_path, template_content):
 
     # 🆕 Extraction automatique des informations
     job_info = extract_job_info(job_ad_text)
+    template_name = select_template_by_tone(job_info)
+    template_content = templates_dict.get(
+        template_name, templates_dict["lettre_template.tex"]
+    )
+
+    logging.info(f"📄 Template sélectionné : {template_name}")
 
     # 🆕 Calcul du score de compatibilité
     if job_info:
@@ -341,8 +382,17 @@ def create_cover_letter(user_config, job_ad_path, template_content):
         final_tex_content = final_tex_content.replace("%%POSTE_VISE%%", poste)
         final_tex_content = final_tex_content.replace("%%NOM_ENTREPRISE%%", entreprise)
 
+        poste_clean = (
+            poste.replace("-", "")
+            .replace(" ", "_")
+            .replace("/", "_")
+            .replace("\\", "_")
+        )
+        entreprise_clean = entreprise.replace(" ", "_")
+
         # Utiliser le nom de l'entreprise pour le fichier
-        output_filename_base = f"lettre_motivation_{entreprise.replace(' ', '_')}_{job_info.get('type_contrat', 'poste').replace(' ', '_')}"
+        output_filename_base = f"lettre_motivation_{entreprise_clean}_{poste_clean}"
+
     else:
         # Fallback sur l'ancien système
         base_name = (
@@ -391,22 +441,37 @@ def main():
     # Définition des chemins
     input_dir = "input"
     output_dir = "output"
-    template_path = os.path.join("templates", "lettre_template.tex")
+    templates_dir = "templates"
 
-    # Vérification de l'existence des dossiers et du template
+    # Vérification
     if not os.path.isdir(input_dir):
         logging.error(f"❌ Le dossier '{input_dir}' est introuvable.")
         return
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
         logging.info(f"📁 Dossier '{output_dir}' créé.")
-    if not os.path.exists(template_path):
-        logging.error(f"❌ Le template LaTeX '{template_path}' est introuvable.")
-        return
 
-    # Chargement du contenu du template une seule fois
-    with open(template_path, "r", encoding="utf-8") as f:
-        template_content = f.read()
+    # 🆕 CHARGEMENT DE TOUS LES TEMPLATES
+    templates_dict = {}
+    template_files = [
+        "lettre_template.tex",  # Original (fallback)
+        "lettre_template_elegant.tex",  # Version 1
+        "lettre_template_moderne.tex",  # Version 2
+        "lettre_template_minimaliste.tex",  # Version 3
+    ]
+
+    for template_file in template_files:
+        template_path = os.path.join(templates_dir, template_file)
+        if os.path.exists(template_path):
+            with open(template_path, "r", encoding="utf-8") as f:
+                templates_dict[template_file] = f.read()
+            logging.info(f"✅ Template chargé : {template_file}")
+        else:
+            logging.warning(f"⚠️  Template non trouvé : {template_file}")
+
+    if not templates_dict:
+        logging.error("❌ Aucun template disponible!")
+        return
 
     # Traitement de chaque annonce dans le dossier input
     job_ads = [f for f in os.listdir(input_dir) if f.endswith(".txt")]
@@ -423,7 +488,7 @@ def main():
         logging.info(f"📋 [{i}/{len(job_ads)}] Traitement : {job_ad_filename}")
         logging.info(f"{'─'*60}")
         job_ad_path = os.path.join(input_dir, job_ad_filename)
-        create_cover_letter(user_config, job_ad_path, template_content)
+        create_cover_letter(user_config, job_ad_path, templates_dict)
         logging.info(f"{'─'*60}\n")
 
     logging.info(f"\n{'='*60}")

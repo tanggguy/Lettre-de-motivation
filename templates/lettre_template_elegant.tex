@@ -1,0 +1,116 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{fontawesome5}
+\usepackage{tikz}
+\usepackage{setspace}
+
+% Couleurs personnalisées
+\definecolor{primarycolor}{RGB}{0, 51, 102}      % Bleu marine professionnel
+\definecolor{secondarycolor}{RGB}{100, 149, 237} % Bleu clair
+\definecolor{accentcolor}{RGB}{220, 220, 220}    % Gris clair
+\definecolor{textgray}{RGB}{80, 80, 80}          % Gris pour le texte
+
+\pagestyle{empty}
+\geometry{a4paper, left=2.2cm, right=2.2cm, top=2cm, bottom=2cm}
+\setstretch{1.15} % Interligne légèrement augmenté
+
+% --- Variables à remplacer ---
+\newcommand{\NomCandidat}{%%NOM_COMPLET%%}
+\newcommand{\AdresseCandidat}{%%ADRESSE%%}
+\newcommand{\CPCandidat}{%%CODE_POSTAL%%}
+\newcommand{\EmailCandidat}{%%EMAIL%%}
+\newcommand{\TelCandidat}{%%TELEPHONE%%}
+
+\begin{document}
+
+% --- En-tête moderne avec bandeau ---
+\noindent
+\begin{tikzpicture}[remember picture,overlay]
+    \fill[primarycolor] (current page.north west) rectangle ([yshift=-1.5cm]current page.north east);
+\end{tikzpicture}
+
+\vspace{0.3cm}
+\noindent
+\begin{minipage}{0.65\textwidth}
+    \color{white}
+    {\fontsize{16}{18}\selectfont\textbf{\NomCandidat}} \\[2mm]
+    {\small Candidat Ingénieur}
+\end{minipage}
+\hfill
+\begin{minipage}{0.3\textwidth}
+    \raggedleft
+    \color{white}
+    {\small \faPhone\ \TelCandidat} \\[1mm]
+    {\small \faEnvelope\ \EmailCandidat}
+\end{minipage}
+
+\vspace{0.8cm}
+
+% --- Informations personnelles (en gris discret) ---
+\noindent
+\begin{minipage}{0.6\textwidth}
+    \color{textgray}
+    {\small \faMapMarker*\ \AdresseCandidat, \CPCandidat}
+\end{minipage}
+
+\vspace{1.2cm}
+
+% --- Date et lieu ---
+\noindent
+\begin{flushright}
+    {\color{textgray}\small Douai, le \today}
+\end{flushright}
+
+\vspace{0.8cm}
+
+% --- Destinataire ---
+\noindent
+\textbf{%%NOM_ENTREPRISE%%} \\
+{\color{textgray}\small Service Recrutement} \\
+{\color{textgray}\small %%ADRESSE_ENTREPRISE%%}
+
+\vspace{1cm}
+
+% --- Objet stylisé ---
+\noindent
+{\color{primarycolor}\rule{0.08\textwidth}{2pt}}
+\vspace{2mm}
+
+\noindent
+{\Large\textbf{Candidature : %%POSTE_VISE%%}}
+
+\vspace{2mm}
+\noindent
+{\color{primarycolor}\rule{0.4\textwidth}{0.5pt}}
+
+\vspace{0.8cm}
+
+% --- Formule d'appel ---
+\noindent
+Madame, Monsieur,
+
+\vspace{0.5cm}
+
+% --- Corps de la lettre ---
+%%CORPS_LETTRE%%
+
+\vspace{1cm}
+
+% --- Formule de politesse ---
+\noindent
+Dans l'attente d'un retour favorable de votre part, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+\vspace{1.5cm}
+
+% --- Signature avec ligne décorative ---
+\begin{flushright}
+    \color{primarycolor}\rule{0.25\textwidth}{0.5pt} \\[3mm]
+    {\color{black}\textbf{\NomCandidat}}
+\end{flushright}
+
+\end{document}
