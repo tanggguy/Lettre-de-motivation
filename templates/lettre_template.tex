@@ -4,6 +4,9 @@
 \usepackage{lmodern}
 \usepackage[french]{babel}
 \usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{fontawesome5}
+\definecolor{darkblue}{rgb}{0.0, 0.2, 0.45}
 \pagestyle{empty}
 \geometry{a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
 
@@ -16,17 +19,27 @@
 
 \begin{document}
 
-% --- En-tête ---
 \begin{flushright}
-\NomCandidat \\
-\AdresseCandidat \\
-\CPCandidat \\
-\EmailCandidat \\
-\TelCandidat
+    {\Large \textbf{\color{darkblue} \NomCandidat}} \\ % Nom en plus grand et en couleur
+    \vspace{3mm} % Un peu d'espace
+    \AdresseCandidat \\
+    \CPCandidat \\
+    \vspace{2mm}
+    {\color{darkblue} \EmailCandidat} \\ % Icône + email
+    \TelCandidat % Icône + téléphone
 \end{flushright}
+% --- En-tête ---
+% \begin{flushright}
+% \NomCandidat \\
+% \AdresseCandidat \\
+% \CPCandidat \\
+% \EmailCandidat \\
+% \TelCandidat
+% \end{flushright}
 
+\vspace{5mm}
+\noindent\rule{0.4\textwidth}{0.4pt}
 \vspace{1cm}
-
 % --- Destinataire (peut être générique ou extrait de l'annonce) ---
 \begin{flushleft}
 À l'attention du service de recrutement \\
