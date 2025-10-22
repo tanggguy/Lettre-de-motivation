@@ -77,7 +77,7 @@ def extract_job_info(job_ad_text):
 
     try:
         logging.info("🔍 Extraction des informations de l'annonce...")
-        model = genai.GenerativeModel("gemini-2.5-pro")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(prompt)
 
         # Nettoyer la réponse pour extraire uniquement le JSON
@@ -197,7 +197,7 @@ def generate_letter_body(user_profile, job_ad_text, job_info=None):
     **Instructions strictes :**
     - Adapte la lettre suivante à l'annonce fournie en mettant en avant les compétences et expériences du candidat qui correspondent le mieux aux exigences du poste et aux compétences du candidat: 
     
-    "Actuellement étudiant en deuxième année d'ingénieur à l'IMT Nord Europe (Anciennement Mines de Douai), spécialisé en conception mécanique, votre offre de stage en hydrodynamique navale a capté mon attention. Passionné par l'architecture navale et les défis hydrodynamiques, l'opportunité de rejoindre Naval Group est extrêmement motivante. 
+    "Actuellement étudiant en avant dernière année d'ecole d'ingénieur à l'IMT Nord Europe (Anciennement Mines de Douai), spécialisé en conception mécanique, votre offre de stage en hydrodynamique navale a capté mon attention. Passionné par l'architecture navale et les défis hydrodynamiques, l'opportunité de rejoindre Naval Group est extrêmement motivante. 
     
     Les missions que vous proposez, centrées sur l'amélioration des outils de calcul de tenue à la mer, correspondent à mon projet professionnel. L'idée de contribuer à l'optimisation des carènes et à la prédiction des performances de navires est une occasion unique de mettre en application mes connaissances théoriques. 
     
@@ -209,18 +209,20 @@ def generate_letter_body(user_profile, job_ad_text, job_info=None):
 
     - **IMPORTANT** : Utilise les informations extraites ci-dessus pour personnaliser la lettre (mentionne le nom de l'entreprise, adapte au secteur, reprends les valeurs)
     - Adapte le ton à celui de l'annonce (plus moderne pour startup, plus formel pour grand groupe)
+    - Précise bien (anciennement Mines de Douai)
     - Mets en évidence les compétences du candidat qui matchent avec celles recherchées
     - Sois concis et va droit au but, en évitant les répétitions inutiles.
     - Utilise des exemples concrets tirés du profil du candidat pour illustrer ses compétences
     - Personnalise pour que l'entreprise voie que cette lettre lui est adressée spécifiquement
     - Utilise un langage professionnel simple sans être pompeux
-    - Le ton doit être professionnel, sans tournure de phrase lourde, le vocabulaire et les expressions doivent etre courantes et fluides. 
-    - **IMPORTANT** : Ne génère **UNIQUEMENT** que le corps de la lettre. N'inclus PAS "Cher Monsieur/Madame", l'objet, l'adresse, la date, ou la formule de politesse finale. Commence directement par le premier paragraphe.
+    - Le ton doit être professionnel, sans tournure de phrase lourde, evite les formulations convenues , le vocabulaire et les expressions doivent etre courantes et fluides. 
+    - N'utilise pas de ** ** ou de _ _ pour mettre en valeur des mots.
+    - **IMPORTANT** : Ne génère **UNIQUEMENT** que le corps de la lettre. N'inclus PAS "Cher Monsieur/Madame", l'objet, l'adresse, la date, ou la formule de politesse finale. Commence directement par le premier paragraphe,fait des alineas au debut de chaque paragraphe.2500 caractères maximum espace compris.
     """
 
     try:
         logging.info("📝 Génération du corps de la lettre...")
-        model = genai.GenerativeModel("gemini-2.5-pro")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(prompt)
         logging.info("✅ Réponse de l'API Gemini reçue.")
         return response.text
@@ -322,13 +324,13 @@ def select_template_by_tone(job_info):
 
     # Version 3 (Minimaliste) pour conseil, finance, luxe
     if any(keyword in secteur for keyword in ["conseil", "finance", "audit", "banque"]):
-        return "lettre_template_minimaliste.tex"
+        return "lettre_template_moderne.tex"
 
     if any(keyword in ton for keyword in ["formel", "sobre", "classique", "premium"]):
-        return "lettre_template_minimaliste.tex"
+        return "lettre_template_moderne.tex"
 
     # Version 1 (Élégante) pour industrie, grandes entreprises (défaut)
-    return "lettre_template_elegant.tex"
+    return "lettre_template_moderne.tex"
 
 
 def create_cover_letter(user_config, job_ad_path, templates_dict):
