@@ -211,7 +211,7 @@ FORMAT :
 STRUCTURE OBLIGATOIRE :
 
 §1 - ACCROCHE (3-4 lignes)
-Indique la formation actuelle et precise (anciennement Mines de Douai) a lapremiere mention d'IMT Nord Europe, explique pourquoi cette entreprise/ce poste précisément en citant des éléments concrets de l'annonce. Fais le lien avec une expérience pertinente du candidat si pertinent.
+Indique la formation actuelle et precise (anciennement Mines de Douai) a la premiere mention d'IMT Nord Europe, explique pourquoi cette entreprise/ce poste précisément en citant des éléments concrets de l'annonce. Fais le lien avec une expérience pertinente du candidat si pertinent.
 
 §2 - COMPÉTENCES TECHNIQUES (5-6 lignes)
 Mets en avant les compétences techniques clés (CAO, simulations, programmation), les expériences professionnelles pertinentes, et les projets académiques en lien direct avec les missions décrites dans l'annonce. Sois précis et factuel.
