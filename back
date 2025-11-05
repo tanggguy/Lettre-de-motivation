@@ -1,0 +1,25 @@
+**Instructions strictes :**
+    - Adapte la lettre suivante à l'annonce fournie en mettant en avant les compétences et expériences du candidat qui correspondent le mieux aux exigences du poste et aux compétences du candidat: 
+    
+    "Actuellement étudiant en avant dernière année d'ecole d'ingénieur à l'IMT Nord Europe (Anciennement Mines de Douai), spécialisé en conception mécanique, votre offre de stage en hydrodynamique navale a capté mon attention. Passionné par l'architecture navale et les défis hydrodynamiques, l'opportunité de rejoindre Naval Group est extrêmement motivante. 
+    
+    Les missions que vous proposez, centrées sur l'amélioration des outils de calcul de tenue à la mer, correspondent à mon projet professionnel. L'idée de contribuer à l'optimisation des carènes et à la prédiction des performances de navires est une occasion unique de mettre en application mes connaissances théoriques. 
+    
+    Ma formation en conception mécanique m'a permis de développer des compétences solides en simulation et en calcul par éléments finis, notamment avec des logiciels comme Abaqus. Mes connaissances en programmation, particulièrement en Python, alliées à des bases en mécanique des fluides, me semblent être des atouts majeurs pour prendre en main vos outils, analyser des résultats et proposer des améliorations pertinentes. 
+    
+    Mes expériences passées, y compris celle de moniteur de voile, m'ont appris à être rigoureux, organisé et à bien communiquer, des qualités essentielles pour travailler efficacement en équipe sur des projets d'envergure. 
+    
+    Pratiquant les sports nautiques, je suis particulièrement sensible aux enjeux de la performance hydrodynamique. Je suis curieux, force de proposition et très motivé à l'idée de m'investir dans un projet qui aura une réelle valeur ajoutée pour votre équipe."
+
+    - **IMPORTANT** : Utilise les informations extraites ci-dessus pour personnaliser la lettre (mentionne le nom de l'entreprise, adapte au secteur, reprends les valeurs)
+    - Adapte le ton à celui de l'annonce (plus moderne pour startup, plus formel pour grand groupe)
+    - Précise bien (anciennement Mines de Douai)
+    - Mets en évidence les compétences du candidat qui matchent avec celles recherchées
+    - Sois concis et va droit au but, en évitant les répétitions inutiles.
+    - Utilise des exemples concrets tirés du profil du candidat pour illustrer ses compétences
+    - Personnalise pour que l'entreprise voie que cette lettre lui est adressée spécifiquement
+    - Utilise un langage professionnel simple sans être pompeux
+    - Le ton doit être professionnel, sans tournure de phrase lourde, evite les formulations convenues , le vocabulaire et les expressions doivent etre courantes et fluides. 
+    - N'utilise pas de ** ** ou de _ _ pour mettre en valeur des mots.
+    - **IMPORTANT** : Ne génère **UNIQUEMENT** que le corps de la lettre. N'inclus PAS "Cher Monsieur/Madame", l'objet, l'adresse, la date, ou la formule de politesse finale. Commence directement par le premier paragraphe,fait des alineas au debut de chaque paragraphe.2500 caractères maximum espace compris.
+    """

@@ -2,6 +2,8 @@ import os
 import json
 import subprocess
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
+
 from dotenv import load_dotenv
 import logging
 from datetime import datetime
@@ -55,7 +57,7 @@ def extract_job_info(job_ad_text):
     Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte (sans markdown, sans commentaires) :
     {{
         "entreprise": "nom de l'entreprise",
-        "poste": "titre exact du poste",
+        "poste": "titre exact du poste sans "H/F"",
         "type_contrat": "CDI/CDD/Stage/Alternance/etc",
         "duree": "durée si applicable (ex: 6 mois) sinon null",
         "localisation": "ville et/ou région",
@@ -82,6 +84,10 @@ def extract_job_info(job_ad_text):
 
         # Nettoyer la réponse pour extraire uniquement le JSON
         text = response.text.strip()
+        if hasattr(response, "candidates"):
+            for candidate in response.candidates:
+                print(f"Finish reason: {candidate.finish_reason}")
+                print(f"Safety ratings: {candidate.safety_ratings}")
 
         # Enlever les balises markdown si présentes
         if text.startswith("```json"):
@@ -194,36 +200,63 @@ def generate_letter_body(user_profile, job_ad_text, job_info=None):
     {job_ad_text}
     ---
 
-    **Instructions strictes :**
-    - Adapte la lettre suivante à l'annonce fournie en mettant en avant les compétences et expériences du candidat qui correspondent le mieux aux exigences du poste et aux compétences du candidat: 
-    
-    "Actuellement étudiant en avant dernière année d'ecole d'ingénieur à l'IMT Nord Europe (Anciennement Mines de Douai), spécialisé en conception mécanique, votre offre de stage en hydrodynamique navale a capté mon attention. Passionné par l'architecture navale et les défis hydrodynamiques, l'opportunité de rejoindre Naval Group est extrêmement motivante. 
-    
-    Les missions que vous proposez, centrées sur l'amélioration des outils de calcul de tenue à la mer, correspondent à mon projet professionnel. L'idée de contribuer à l'optimisation des carènes et à la prédiction des performances de navires est une occasion unique de mettre en application mes connaissances théoriques. 
-    
-    Ma formation en conception mécanique m'a permis de développer des compétences solides en simulation et en calcul par éléments finis, notamment avec des logiciels comme Abaqus. Mes connaissances en programmation, particulièrement en Python, alliées à des bases en mécanique des fluides, me semblent être des atouts majeurs pour prendre en main vos outils, analyser des résultats et proposer des améliorations pertinentes. 
-    
-    Mes expériences passées, y compris celle de moniteur de voile, m'ont appris à être rigoureux, organisé et à bien communiquer, des qualités essentielles pour travailler efficacement en équipe sur des projets d'envergure. 
-    
-    Pratiquant les sports nautiques, je suis particulièrement sensible aux enjeux de la performance hydrodynamique. Je suis curieux, force de proposition et très motivé à l'idée de m'investir dans un projet qui aura une réelle valeur ajoutée pour votre équipe."
+    CONSIGNES STRICTES :
 
-    - **IMPORTANT** : Utilise les informations extraites ci-dessus pour personnaliser la lettre (mentionne le nom de l'entreprise, adapte au secteur, reprends les valeurs)
-    - Adapte le ton à celui de l'annonce (plus moderne pour startup, plus formel pour grand groupe)
-    - Précise bien (anciennement Mines de Douai)
-    - Mets en évidence les compétences du candidat qui matchent avec celles recherchées
-    - Sois concis et va droit au but, en évitant les répétitions inutiles.
-    - Utilise des exemples concrets tirés du profil du candidat pour illustrer ses compétences
-    - Personnalise pour que l'entreprise voie que cette lettre lui est adressée spécifiquement
-    - Utilise un langage professionnel simple sans être pompeux
-    - Le ton doit être professionnel, sans tournure de phrase lourde, evite les formulations convenues , le vocabulaire et les expressions doivent etre courantes et fluides. 
-    - N'utilise pas de ** ** ou de _ _ pour mettre en valeur des mots.
-    - **IMPORTANT** : Ne génère **UNIQUEMENT** que le corps de la lettre. N'inclus PAS "Cher Monsieur/Madame", l'objet, l'adresse, la date, ou la formule de politesse finale. Commence directement par le premier paragraphe,fait des alineas au debut de chaque paragraphe.2500 caractères maximum espace compris.
-    """
+FORMAT :
+- Génère UNIQUEMENT le corps de la lettre (3 paragraphes maximum)
+- N'inclus PAS : formule d'appel, objet, adresse, date, formule de politesse finale
+- Commence directement par le premier paragraphe
+- Maximum 2500 caractères espaces compris
 
+STRUCTURE OBLIGATOIRE :
+
+§1 - ACCROCHE (3-4 lignes)
+Indique la formation actuelle et precise (anciennement Mines de Douai) a lapremiere mention d'IMT Nord Europe, explique pourquoi cette entreprise/ce poste précisément en citant des éléments concrets de l'annonce. Fais le lien avec une expérience pertinente du candidat si pertinent.
+
+§2 - COMPÉTENCES TECHNIQUES (5-6 lignes)
+Mets en avant les compétences techniques clés (CAO, simulations, programmation), les expériences professionnelles pertinentes, et les projets académiques en lien direct avec les missions décrites dans l'annonce. Sois précis et factuel.
+
+§3 - APPORT MUTUEL (4-5 lignes)
+Explique ce que le candidat apporte concrètement à l'entreprise et ce qu'il souhaite développer pendant ce stage. Termine par une phrase d'ouverture vers un entretien sans formule de politesse.
+
+TON :
+- Courant, simple et direct
+- Évite le jargon pompeux et les formules convenues ("je me permets de", "vivement intéressé par", "immédiatement retenu mon attention", "opportunité unique", "defi technique")
+- Privilégie les verbes d'action, phrases courtes (maximum 2 lignes par phrase) et les faits concrets : "correspond à", "m'intéresse", "je peux apporter"
+- Naturel et authentique
+- Utilise la forme active : "Je peux apporter" plutôt que "Je souhaite apporter"
+
+
+RÈGLES IMPORTANTES :
+- Personnalise systématiquement en citant des éléments précis de l'annonce
+- Ne répète pas le CV, apporte de la valeur ajoutée
+- Montre une réelle connaissance de l'entreprise et du secteur
+- Sois concis : chaque mot doit compter
+
+Génère maintenant la lettre de motivation.
+"""
     try:
         logging.info("📝 Génération du corps de la lettre...")
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel(
+            "gemini-2.5-pro",
+            generation_config={
+                "temperature": 0.6,
+                "top_p": 0.9,
+                "top_k": 64,
+            },
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            },
+        )
         response = model.generate_content(prompt)
+        if hasattr(response, "candidates"):
+            for candidate in response.candidates:
+                print(f"Finish reason: {candidate.finish_reason}")
+                print(f"Safety ratings: {candidate.safety_ratings}")
+
         logging.info("✅ Réponse de l'API Gemini reçue.")
         return response.text
     except Exception as e:
@@ -423,9 +456,9 @@ def create_cover_letter(user_config, job_ad_path, templates_dict):
         f.write(final_tex_content)
 
     success = compile_latex_to_pdf(tex_filepath)
-
+    json_export = user_config.get("json_export", False)
     # 🆕 Sauvegarder les métadonnées
-    if success and job_info:
+    if success and job_info and json_export:
         save_job_metadata(job_info, match_info, pdf_filepath)
 
 
