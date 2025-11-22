@@ -1,0 +1,160 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f5f7;
+  --card-bg: #ffffff;
+  --text: #1f2933;
+  --muted: #637381;
+  --border: #e0e6ed;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --success: #0f9d58;
+  --error: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Roboto", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.hint {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.hint strong {
+  color: var(--text);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+}
+
+input[type="file"],
+textarea {
+  font: inherit;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  resize: vertical;
+}
+
+textarea {
+  min-height: 120px;
+}
+
+small {
+  color: var(--muted);
+}
+
+.actions {
+  text-align: right;
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+.alert {
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.alert.success {
+  background: rgba(15, 157, 88, 0.1);
+  border: 1px solid rgba(15, 157, 88, 0.3);
+  color: var(--success);
+}
+
+.alert.error {
+  background: rgba(192, 57, 43, 0.12);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  color: var(--error);
+}
+
+.download {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.results h2 {
+  margin-top: 0;
+}
+
+.result-block + .result-block {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.score {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  button {
+    width: 100%;
+  }
+}

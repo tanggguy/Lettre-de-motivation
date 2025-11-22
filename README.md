@@ -1,4 +1,3 @@
-
 /generateur_lettre_motivation/
 |
 |-- input/
@@ -7,11 +6,21 @@
 |   |-- ... (d'autres annonces)
 |
 |-- output/
-|   |-- (les PDF générés apparaîtront ici)
+|   |-- lettre_motivation_X.pdf
 |
 |-- templates/
 |   |-- lettre_template.tex
+|   |-- lettre_template_moderne.tex
+|   |-- lettre_template_minimaliste.tex
+|
+|-- web_templates/
+|   |-- index.html
+|
+|-- web_static/
+|   |-- style.css
 |
 |-- .env
 |-- config.json
-|-- main.py
+|-- main.py              # génération CLI des lettres
+|-- web_app.py           # interface web Flask locale
+|-- requirements.txt
