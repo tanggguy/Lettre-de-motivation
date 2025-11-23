@@ -88,6 +88,15 @@
     <div class="chart-card">
         <div id="cumulative-chart"></div>
     </div>
+    <div class="chart-card">
+        <div id="funnel-chart"></div>
+    </div>
+    <div class="chart-card">
+        <div id="heatmap-chart"></div>
+    </div>
+    <div class="chart-card" style="grid-column: 1 / -1;">
+        <div id="wordcloud-chart"></div>
+    </div>
 </section>
 
 <script>
@@ -96,5 +105,14 @@
 
     var cumulativeGraph = {{ graph_cumulative_json | safe }};
     Plotly.newPlot('cumulative-chart', cumulativeGraph.data, cumulativeGraph.layout);
+
+    var funnelGraph = {{ graph_funnel_json | safe }};
+    Plotly.newPlot('funnel-chart', funnelGraph.data, funnelGraph.layout);
+
+    var heatmapGraph = {{ graph_heatmap_json | safe }};
+    Plotly.newPlot('heatmap-chart', heatmapGraph.data, heatmapGraph.layout);
+
+    var wordcloudGraph = {{ graph_wordcloud_json | safe }};
+    Plotly.newPlot('wordcloud-chart', wordcloudGraph.data, wordcloudGraph.layout);
 </script>
 {% endblock %}

@@ -265,6 +265,7 @@ def generate_email_content(candidature, user_config):
     - Entreprise : {candidature.entreprise}
     - Poste : {candidature.poste}
     - Pièces jointes incluses : CV et Lettre de motivation
+    - Mentionnes le fait que le candidat soit en école d'ingénieur a IMT Nord Europe (anciennement Mines de Douai)
     
     **Consignes :**
     - Le mail doit être simple, court, poli et professionnel,il doit mentionner le poste et "candidature spontanée" si c'est une candidature spontanée.
@@ -429,13 +430,123 @@ def analytics():
     )
     graph_cumulative_json = json.dumps(fig_cumulative, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # 4. Entonnoir de Conversion (Funnel Chart)
+    # Logique : Envoyée -> Entretien -> Offre
+    # Envoyée = Tout sauf "En préparation"
+    # Entretien = Entretien + Offre
+    # Offre = Offre
+    count_envoyees = candidatures_envoyees_total
+    count_entretiens = entretiens_decroches + offres_decroches
+    count_offres = offres_decroches
+
+    fig_funnel = go.Figure(go.Funnel(
+        y=["Candidatures Envoyées", "Entretiens", "Offres"],
+        x=[count_envoyees, count_entretiens, count_offres],
+        textinfo="value+percent initial",
+        marker={"color": ["#2563eb", "#f59e0b", "#10b981"]}
+    ))
+    fig_funnel.update_layout(
+        title='Entonnoir de Conversion',
+        template='plotly_white',
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=300
+    )
+    graph_funnel_json = json.dumps(fig_funnel, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # 5. Heatmap d'Activité (Par jour de la semaine)
+    # On veut savoir quel jour de la semaine on postule le plus
+    days_order = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+    day_counts = {day: 0 for day in days_order}
+    
+    # Mapping weekday int (0=Monday) to name
+    weekday_map = {0: 'Lundi', 1: 'Mardi', 2: 'Mercredi', 3: 'Jeudi', 4: 'Vendredi', 5: 'Samedi', 6: 'Dimanche'}
+    
+    for c in candidatures:
+        day_name = weekday_map[c.date_creation.weekday()]
+        day_counts[day_name] += 1
+        
+    fig_heatmap = go.Figure(data=[
+        go.Bar(x=days_order, y=[day_counts[d] for d in days_order], marker_color='#8b5cf6')
+    ])
+    fig_heatmap.update_layout(
+        title='Activité par Jour de la Semaine',
+        xaxis_title='Jour',
+        yaxis_title='Candidatures',
+        template='plotly_white',
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=300
+    )
+    graph_heatmap_json = json.dumps(fig_heatmap, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # 6. Nuage de Mots (Bubble Chart)
+    # Extraction des mots clés des postes
+    import re
+    from collections import Counter
+    
+    all_text = " ".join([c.poste for c in candidatures]).lower()
+    # Nettoyage basique
+    words = re.findall(r'\w+', all_text)
+    stopwords = {'de', 'et', 'le', 'la', 'les', 'un', 'une', 'pour', 'en', 'à', 'au', 'du', 'des', 'stage', 'alternance', 'cdi', 'cdd'} 
+    # On garde 'stage'/'alternance' ou pas ? L'utilisateur a dit "Basé sur les titres", souvent "Stage Data Scientist". 
+    # Si on enlève 'stage', on voit mieux la techno. Gardons 'stage' dans stopwords pour voir les métiers.
+    
+    filtered_words = [w for w in words if w not in stopwords and len(w) > 2]
+    word_counts = Counter(filtered_words)
+    
+    # Top 20 mots
+    common_words = word_counts.most_common(20)
+    
+    if common_words:
+        words_list, counts_list = zip(*common_words)
+        # Bubble chart "hack" : scatter plot avec positions random ou spiral
+        # Pour faire simple et joli : on utilise juste la taille des bulles sur un axe X catégoriel ou random
+        # Mieux : Packed Bubble Chart est complexe sans librairie dédiée.
+        # Alternative simple : Bar chart horizontal trié ou Treemap
+        # L'utilisateur a validé "Bubble Chart". On va faire un Scatter simple avec des coordonnées pseudo-aléatoires pour disperser.
+        import random
+        
+        # On essaie de disperser un peu pour pas que tout se chevauche
+        x_vals = [random.uniform(0, 10) for _ in range(len(words_list))]
+        y_vals = [random.uniform(0, 10) for _ in range(len(words_list))]
+        sizes = [c * 15 for c in counts_list] # Scale factor
+        colors = [f'hsl({random.randint(0, 360)}, 70%, 50%)' for _ in range(len(words_list))]
+        
+        fig_wordcloud = go.Figure(data=[go.Scatter(
+            x=x_vals,
+            y=y_vals,
+            mode='markers+text',
+            text=words_list,
+            textposition="top center",
+            marker=dict(
+                size=sizes,
+                color=colors,
+                opacity=0.6
+            )
+        )])
+        fig_wordcloud.update_layout(
+            title='Mots-clés des Postes',
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            template='plotly_white',
+            margin=dict(l=20, r=20, t=40, b=20),
+            height=300
+        )
+    else:
+        fig_wordcloud = go.Figure()
+        fig_wordcloud.update_layout(title="Pas assez de données pour le nuage de mots")
+
+    graph_wordcloud_json = json.dumps(fig_wordcloud, cls=plotly.utils.PlotlyJSONEncoder)
+
     return render_template(
         "analytics.html",
         total_candidatures=total_candidatures,
         candidatures_en_cours=candidatures_en_cours,
         conversion_rate=conversion_rate,
         graph_daily_json=graph_daily_json,
-        graph_cumulative_json=graph_cumulative_json
+        graph_cumulative_json=graph_cumulative_json,
+        graph_funnel_json=graph_funnel_json,
+        graph_heatmap_json=graph_heatmap_json,
+        graph_wordcloud_json=graph_wordcloud_json
     )
 
 

@@ -149,11 +149,6 @@ Voici des pistes d'amélioration et d'outils supplémentaires envisagés pour en
 
 Pour aller plus loin, voici des idées concrètes pour enrichir le dashboard et transformer l'outil en une véritable suite de gestion de carrière :
 
-### 📊 Analytics & Statistiques
-*   **Vue d'ensemble** : Graphiques montrant le nombre de candidatures par semaine/mois.
-*   **Taux de conversion** : Calcul automatique du ratio "Candidatures envoyées" vs "Entretiens décrochés".
-*   **Répartition** : Camemberts par type de poste ou par secteur d'activité.
-
 ### ⚙️ Gestion de Profil (Settings)
 *   **Interface d'édition** : Une page dédiée pour modifier le fichier `config.json` directement depuis le navigateur (plus besoin d'éditer le fichier à la main).
 *   **Gestion des compétences** : Ajouter/Supprimer des compétences clés via une interface tags.
@@ -167,5 +162,3 @@ Pour aller plus loin, voici des idées concrètes pour enrichir le dashboard et 
 *   **Agenda des Relances** : Une vue calendrier affichant les dates limites pour relancer les recruteurs (ex: J+7 après envoi).
 *   **Planification d'entretiens** : Ajouter les dates d'entretiens directement dans le dashboard avec synchronisation Google Calendar.
 
-### 📋 Kanban Board
-*   **Drag & Drop** : Remplacer la liste simple par un tableau Kanban (colonnes : "À faire", "Envoyé", "Entretien", "Offre", "Refus") pour déplacer les cartes de candidature visuellement.
