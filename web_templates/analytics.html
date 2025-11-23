@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Candidatures{% endblock %}
+
+{% block extra_head %}
+<style>
+    .kpi-container {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .kpi-card {
+        flex: 1;
+        min-width: 200px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2563eb;
+        margin: 10px 0;
+    }
+
+    .kpi-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="header-actions">
+    <h1 style="margin: 0;">Analytics & Statistiques</h1>
+</header>
+
+<!-- KPIs -->
+<section class="kpi-container">
+    <div class="kpi-card">
+        <div class="kpi-label">Total Candidatures</div>
+        <div class="kpi-value">{{ total_candidatures }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">En Cours</div>
+        <div class="kpi-value">{{ candidatures_en_cours }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Taux de Conversion</div>
+        <div class="kpi-value">{{ conversion_rate }}%</div>
+        <small style="color: #9ca3af;">(Envoyée → Entretien)</small>
+    </div>
+</section>
+
+<!-- Charts -->
+<section class="charts-container">
+    <div class="chart-card">
+        <div id="daily-chart"></div>
+    </div>
+    <div class="chart-card">
+        <div id="cumulative-chart"></div>
+    </div>
+</section>
+
+<script>
+    var dailyGraph = {{ graph_daily_json | safe }};
+    Plotly.newPlot('daily-chart', dailyGraph.data, dailyGraph.layout);
+
+    var cumulativeGraph = {{ graph_cumulative_json | safe }};
+    Plotly.newPlot('cumulative-chart', cumulativeGraph.data, cumulativeGraph.layout);
+</script>
+{% endblock %}

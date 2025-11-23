@@ -57,7 +57,7 @@ def extract_job_info(job_ad_text):
     Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte (sans markdown, sans commentaires) :
     {{
         "entreprise": "nom de l'entreprise",
-        "poste": "titre exact du poste sans "H/F et resume si trop long, 6 mot max; le mot 'stage' doit etre inclus si c'est un stage"",
+        "poste": "titre exact du poste sans "H/F et resume si trop long, 6 mot max; le mot 'stage' doit etre inclus si c'est un stage, 'Candidature spontanée' + le titre du poste doit figurer si c'est une candidature spontanée",
         "type_contrat": "CDI/CDD/Stage/Alternance/etc",
         "duree": "duree si applicable (ex: 6 mois) sinon null",
         "localisation": "ville et/ou region",
@@ -149,9 +149,9 @@ def calculate_match_score(user_profile, job_info):
     # Bonus si toutes les competences requises sont couvertes
     if required_skills and required_skills.issubset(user_skills):
         score += 20
-        details.append(" Toutes les competences requises sont maÃ®trisees !")
+        details.append(" Toutes les competences requises sont maitrisees ")
 
-    score = min(score, 100)  # Plafonner Ã  100
+    score = min(score, 100)  # Plafonner à 100
 
     return {
         "score": score,

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Générateur de Lettre de Motivation{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>GenLetter AI</h3>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="{{ url_for('index') }}"
+                        class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+                        <span class="label">Générateur</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('dashboard') }}"
+                        class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <span class="label">Tableau de Bord</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('analytics') }}"
+                        class="nav-item {% if request.endpoint == 'analytics' %}active{% endif %}">
+                        <span class="label">Statistiques</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <p>&copy; 2025 GenLetter</p>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

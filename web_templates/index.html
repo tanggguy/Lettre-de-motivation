@@ -1,102 +1,86 @@
-<!DOCTYPE html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Générateur de lettre de motivation LaTeX</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  </head>
-  <body>
-    <div class="page">
-      <header>
-        <h1>Générateur de lettre de motivation LaTeX</h1>
-        <p class="hint">
-          Uploade une annonce <strong>.txt</strong> ou colle-la ci-dessous.
-          Si un fichier est fourni, il sera prioritaire sur le texte collé.
-        </p>
-      </header>
+{% extends "base.html" %}
 
-      {% if status %}
-      <div class="alert {{ 'success' if status == 'success' else 'error' }}">
-        <p>{{ message }}</p>
-        {% if pdf_filename %}
-        <p>
-          <a class="download" href="{{ url_for('download', filename=pdf_filename) }}"
-            >Télécharger le PDF généré</a
-          >
-        </p>
-        {% endif %}
-      </div>
-      {% endif %}
+{% block title %}Générateur de Lettre de Motivation{% endblock %}
 
-      <section class="card">
-        <form action="{{ url_for('generate') }}" method="POST" enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="job_file">Annonce (.txt)</label>
-            <input type="file" id="job_file" name="job_file" accept=".txt" />
-            <small>Optionnel. Prioritaire si rempli.</small>
-          </div>
+{% block content %}
+<header>
+  <h1>Générateur de lettre de motivation LaTeX</h1>
+  <p class="hint">
+    Uploade une annonce <strong>.txt</strong> ou colle-la ci-dessous.
+    Si un fichier est fourni, il sera prioritaire sur le texte collé.
+  </p>
+</header>
 
-          <div class="form-group">
-            <label for="job_text">… ou coller l'annonce</label>
-            <textarea
-              id="job_text"
-              name="job_text"
-              rows="10"
-              placeholder="Colle ici le texte de l'annonce"
-            >{{ form_data.job_text }}</textarea>
-            <small>Ignoré si un fichier est uploadé.</small>
-          </div>
+{% if status %}
+<div class="alert {{ 'success' if status == 'success' else 'error' }}">
+  <p>{{ message }}</p>
+  {% if pdf_filename %}
+  <p>
+    <a class="download" href="{{ url_for('download', filename=pdf_filename) }}">Télécharger le PDF généré</a>
+  </p>
+  {% endif %}
+</div>
+{% endif %}
 
-          <div class="form-group">
-            <label for="custom_prompt">Instructions supplémentaires</label>
-            <textarea
-              id="custom_prompt"
-              name="custom_prompt"
-              rows="5"
-              placeholder="Ajoute des consignes spécifiques pour le corps de la lettre"
-            >{{ form_data.custom_prompt }}</textarea>
-          </div>
-
-          <div class="actions">
-            <button type="submit">Générer la lettre</button>
-          </div>
-        </form>
-      </section>
-
-      {% if status %}
-      <section class="card results">
-        <h2>Résultats</h2>
-        {% if job_info %}
-        <div class="result-block">
-          <h3>Annonce analysée</h3>
-          <ul>
-            {% if job_info.poste %}<li><strong>Poste :</strong> {{ job_info.poste }}</li>{% endif %}
-            {% if job_info.entreprise %}<li><strong>Entreprise :</strong> {{ job_info.entreprise }}</li>{% endif %}
-            {% if job_info.localisation %}<li><strong>Localisation :</strong> {{ job_info.localisation }}</li>{% endif %}
-            {% if job_info.type_contrat %}<li><strong>Type de contrat :</strong> {{ job_info.type_contrat }}</li>{% endif %}
-          </ul>
-        </div>
-        {% endif %}
-
-        {% if match_info %}
-        <div class="result-block">
-          <h3>Score de compatibilité</h3>
-          {% if match_info.score is not none %}
-          <p class="score">{{ match_info.score }} / 100</p>
-          {% endif %}
-
-          {% if match_info.matching_skills %}
-          <p><strong>Compétences correspondantes :</strong> {{ match_info.matching_skills | join(", ") }}</p>
-          {% endif %}
-
-          {% if match_info.missing_skills %}
-          <p><strong>Compétences manquantes :</strong> {{ match_info.missing_skills | join(", ") }}</p>
-          {% endif %}
-        </div>
-        {% endif %}
-      </section>
-      {% endif %}
+<section class="card">
+  <form action="{{ url_for('generate') }}" method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="job_file">Annonce (.txt)</label>
+      <input type="file" id="job_file" name="job_file" accept=".txt" />
+      <small>Optionnel. Prioritaire si rempli.</small>
     </div>
-  </body>
-</html>
+
+    <div class="form-group">
+      <label for="job_text">… ou coller l'annonce</label>
+      <textarea id="job_text" name="job_text" rows="10"
+        placeholder="Colle ici le texte de l'annonce">{{ form_data.job_text }}</textarea>
+      <small>Ignoré si un fichier est uploadé.</small>
+    </div>
+
+    <div class="form-group">
+      <label for="custom_prompt">Instructions supplémentaires</label>
+      <textarea id="custom_prompt" name="custom_prompt" rows="5"
+        placeholder="Ajoute des consignes spécifiques pour le corps de la lettre">{{ form_data.custom_prompt }}</textarea>
+    </div>
+
+    <div class="actions">
+      <button type="submit">Générer la lettre</button>
+    </div>
+  </form>
+</section>
+
+{% if status %}
+<section class="card results">
+  <h2>Résultats</h2>
+  {% if job_info %}
+  <div class="result-block">
+    <h3>Annonce analysée</h3>
+    <ul>
+      {% if job_info.poste %}<li><strong>Poste :</strong> {{ job_info.poste }}</li>{% endif %}
+      {% if job_info.entreprise %}<li><strong>Entreprise :</strong> {{ job_info.entreprise }}</li>{% endif %}
+      {% if job_info.localisation %}<li><strong>Localisation :</strong> {{ job_info.localisation }}</li>{% endif %}
+      {% if job_info.type_contrat %}<li><strong>Type de contrat :</strong> {{ job_info.type_contrat }}</li>{% endif
+      %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if match_info %}
+  <div class="result-block">
+    <h3>Score de compatibilité</h3>
+    {% if match_info.score is not none %}
+    <p class="score">{{ match_info.score }} / 100</p>
+    {% endif %}
+
+    {% if match_info.matching_skills %}
+    <p><strong>Compétences correspondantes :</strong> {{ match_info.matching_skills | join(", ") }}</p>
+    {% endif %}
+
+    {% if match_info.missing_skills %}
+    <p><strong>Compétences manquantes :</strong> {{ match_info.missing_skills | join(", ") }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

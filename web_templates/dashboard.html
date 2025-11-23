@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de Bord - Kanban{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 200;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+  }
+
+  .close {
+    color: #aaa;
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="header-actions"
+  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h1 style="margin: 0;">Tableau de Bord</h1>
+  <button onclick="openManualModal()" class="btn-primary"
+    style="font-size: 24px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;">+</button>
+</header>
+
+<div class="kanban-board">
+  {% set statuses = [
+  ('En préparation', 'col-en-preparation'),
+  ('Envoyée', 'col-envoyee'),
+  ('Entretien', 'col-entretien'),
+  ('Offre', 'col-offre'),
+  ('Refus', 'col-refus')
+  ] %}
+
+  {% for status, col_class in statuses %}
+  <div class="kanban-column {{ col_class }}">
+    <h3>
+      {{ status }}
+      <span class="count" id="count-{{ status | replace(' ', '-') }}">{{ candidatures | selectattr("statut", "equalto",
+        status) | list | length }}</span>
+    </h3>
+    <div class="kanban-cards" id="list-{{ status | replace(' ', '-') }}" data-status="{{ status }}">
+      {% for cand in candidatures if cand.statut == status %}
+      <div class="kanban-card" data-id="{{ cand.id }}">
+        <div class="card-header">
+          <span class="card-company">
+            {{ cand.entreprise }}
+            {% if cand.url_offer %}
+            <a href="{{ cand.url_offer }}" target="_blank" title="Voir l'offre" style="text-decoration: none;">🔗</a>
+            {% endif %}
+          </span>
+          <span class="card-date">{{ cand.date_creation.strftime('%d/%m') }}</span>
+        </div>
+        <div class="card-role">{{ cand.poste }}</div>
+        <div class="card-actions">
+          {% if cand.fichier_pdf %}
+          <a href="{{ url_for('download', filename=cand.fichier_pdf) }}" class="card-action-btn"
+            title="Télécharger PDF">📄</a>
+          {% endif %}
+          <button onclick="openEmailModal('{{ cand.id }}', '{{ cand.entreprise }}', '{{ cand.poste }}')"
+            class="card-action-btn" title="Email">✉️</button>
+          <a href="{{ url_for('delete_candidature', id=cand.id) }}" onclick="return confirm('Supprimer ?');"
+            class="card-action-btn delete" title="Supprimer">🗑️</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Email Modal -->
+<div id="emailModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeEmailModal()">&times;</span>
+    <h2>Préparer un email</h2>
+    <p id="modal-subtitle" class="text-muted"></p>
+
+    <form id="emailForm" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="email_destinataire">Email du destinataire :</label>
+        <input type="email" id="email_destinataire" name="email_destinataire" required
+          placeholder="recruteur@entreprise.com">
+      </div>
+
+      <div class="form-group">
+        <label for="cv_file">Joindre un CV (PDF) :</label>
+        <input type="file" id="cv_file" name="cv_file" accept=".pdf" required>
+        <small class="text-muted">La lettre de motivation générée sera automatiquement jointe.</small>
+      </div>
+
+      <div style="text-align: right; margin-top: 20px;">
+        <button type="submit" class="btn-primary">Générer le brouillon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Manual Entry Modal -->
+<div id="manualModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeManualModal()">&times;</span>
+    <h2>Ajouter une candidature</h2>
+    <form action="{{ url_for('add_manual') }}" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="entreprise">Entreprise *</label>
+        <input type="text" id="entreprise" name="entreprise" required>
+      </div>
+      <div class="form-group">
+        <label for="poste">Poste / Offre *</label>
+        <input type="text" id="poste" name="poste" required>
+      </div>
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" value="{{ now_date }}">
+      </div>
+      <div class="form-group">
+        <label for="url_offer">Lien de l'annonce</label>
+        <input type="url" id="url_offer" name="url_offer" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="pdf_file">Fichier (CV/Lettre)</label>
+        <input type="file" id="pdf_file" name="pdf_file" accept=".pdf">
+      </div>
+      <div style="text-align: right; margin-top: 20px;">
+        <button type="submit" class="btn-primary">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Initialize SortableJS
+  document.addEventListener('DOMContentLoaded', function () {
+    const columns = document.querySelectorAll('.kanban-cards');
+    columns.forEach(column => {
+      new Sortable(column, {
+        group: 'kanban', // Allow dragging between lists
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+          const itemEl = evt.item;
+          const newStatus = evt.to.getAttribute('data-status');
+          const candidatureId = itemEl.getAttribute('data-id');
+
+          // Update backend
+          fetch(`/api/update_status/${candidatureId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ statut: newStatus }),
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                // Update counts (optional, but good for UX)
+                updateCounts();
+              } else {
+                alert('Erreur lors de la mise à jour du statut');
+                // Revert move (reload page is simplest fallback)
+                location.reload();
+              }
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+              alert('Erreur de connexion');
+            });
+        }
+      });
+    });
+  });
+
+  function updateCounts() {
+    // Simple recount based on DOM
+    document.querySelectorAll('.kanban-column').forEach(col => {
+      const status = col.querySelector('.kanban-cards').getAttribute('data-status');
+      const count = col.querySelectorAll('.kanban-card').length;
+      const countBadge = col.querySelector('.count');
+      if (countBadge) countBadge.textContent = count;
+    });
+  }
+
+  // Modal Logic
+  function openEmailModal(id, entreprise, poste) {
+    var modal = document.getElementById("emailModal");
+    var form = document.getElementById("emailForm");
+    var subtitle = document.getElementById("modal-subtitle");
+    form.action = "/create_draft/" + id;
+    subtitle.textContent = "Pour : " + poste + " chez " + entreprise;
+    modal.style.display = "block";
+  }
+
+  function closeEmailModal() {
+    document.getElementById("emailModal").style.display = "none";
+  }
+
+  window.onclick = function (event) {
+    var emailModal = document.getElementById("emailModal");
+    var manualModal = document.getElementById("manualModal");
+    if (event.target == emailModal) {
+      emailModal.style.display = "none";
+    }
+    if (event.target == manualModal) {
+      manualModal.style.display = "none";
+    }
+  }
+
+  // Manual Modal Logic
+  function openManualModal() {
+    document.getElementById("manualModal").style.display = "block";
+    // Set default date to today if empty (handled by backend but good for UI)
+    if (!document.getElementById("date").value) {
+      document.getElementById("date").valueAsDate = new Date();
+    }
+  }
+
+  function closeManualModal() {
+    document.getElementById("manualModal").style.display = "none";
+  }
+</script>
+{% endblock %}

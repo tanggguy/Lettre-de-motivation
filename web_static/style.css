@@ -80,6 +80,7 @@ textarea {
   border-radius: 8px;
   border: 1px solid var(--border);
   background: #fff;
+  color: var(--text);
   resize: vertical;
 }
 
@@ -137,7 +138,7 @@ button:hover {
   margin-top: 0;
 }
 
-.result-block + .result-block {
+.result-block+.result-block {
   margin-top: 1rem;
   border-top: 1px solid var(--border);
   padding-top: 1rem;
@@ -149,6 +150,27 @@ button:hover {
   margin: 0.5rem 0;
 }
 
+/* Status Styles */
+.status-en-preparation {
+  color: #637381;
+}
+
+.status-envoyee {
+  color: #d97706;
+}
+
+.status-entretien {
+  color: #2563eb;
+}
+
+.status-offre {
+  color: #059669;
+}
+
+.status-refus {
+  color: #dc2626;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 1.5rem 1rem 3rem;
@@ -157,4 +179,253 @@ button:hover {
   button {
     width: 100%;
   }
+}
+
+/* Sidebar Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+
+.nav-links {
+  list-style: none;
+  padding: 1rem;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.nav-links li {
+  margin-bottom: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background-color: #f3f4f6;
+  color: var(--accent);
+}
+
+.nav-item.active {
+  background-color: #eff6ff;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-item .icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-left: 260px;
+  /* Width of sidebar */
+  padding: 2rem;
+  background-color: var(--bg);
+  min-width: 0;
+  /* Prevent overflow issues */
+}
+
+/* Responsive Sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+  }
+
+  .sidebar-header h3,
+  .nav-item .label,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .nav-item .icon {
+    margin-right: 0;
+  }
+
+  .main-content {
+    margin-left: 70px;
+    padding: 1rem;
+  }
+}
+
+/* Kanban Board */
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  align-items: flex-start;
+  height: calc(100vh - 150px);
+}
+
+.kanban-column {
+  flex: 0 0 300px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.kanban-column h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kanban-column h3 .count {
+  background: #e5e7eb;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.kanban-cards {
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 50px;
+  /* Drop target area */
+}
+
+.kanban-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: grab;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.kanban-card:active {
+  cursor: grabbing;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.card-company {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.card-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.card-role {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 0.75rem;
+}
+
+.card-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.card-action-btn:hover {
+  color: var(--accent);
+  background-color: #f3f4f6;
+}
+
+.card-action-btn.delete:hover {
+  color: var(--error);
+}
+
+/* Status Colors for Columns */
+.col-en-preparation {
+  border-top: 4px solid #637381;
+}
+
+.col-envoyee {
+  border-top: 4px solid #d97706;
+}
+
+.col-entretien {
+  border-top: 4px solid #2563eb;
+}
+
+.col-offre {
+  border-top: 4px solid #059669;
+}
+
+.col-refus {
+  border-top: 4px solid #dc2626;
 }
