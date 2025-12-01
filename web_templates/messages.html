@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Générateur de Messages{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 0 auto;">
+    <h1>Générateur de Messages LinkedIn</h1>
+    <p class="text-muted">Générez des messages personnalisés pour contacter des alumni ou recruteurs, avec ou sans
+        candidature liée.</p>
+
+    <div class="card"
+        style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 20px;">
+        <div class="form-group">
+            <label for="candidature_id">Candidature (Optionnel) :</label>
+            <select id="candidature_id" name="candidature_id" style="width: 100%; padding: 8px; margin-bottom: 15px;">
+                <option value="">-- Sélectionner une candidature (facultatif) --</option>
+                {% for cand in candidatures %}
+                <option value="{{ cand.id }}">{{ cand.entreprise }} - {{ cand.poste }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="extra_context">Contexte supplémentaire :</label>
+            <textarea id="extra_context" rows="4" style="width: 100%; padding: 8px;"
+                placeholder="Ex: C'est un ancien de mon école, il travaille sur des sujets d'IA..."></textarea>
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <button onclick="generateMessage()" class="btn-primary" id="generate-btn">Générer le message</button>
+        </div>
+    </div>
+
+    <div id="loading" style="display: none; text-align: center; padding: 20px;">
+        <p>Génération en cours avec Gemini...</p>
+    </div>
+
+    <div id="result-area" class="card"
+        style="display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 20px;">
+        <h3>Résultat</h3>
+        <div class="form-group">
+            <label for="result-subject">Objet :</label>
+            <input type="text" id="result-subject" readonly style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        </div>
+        <div class="form-group">
+            <label for="result-body">Message :</label>
+            <textarea id="result-body" rows="6" style="width: 100%; padding: 8px;"></textarea>
+            <small id="char-count" class="text-muted" style="float: right;">0 caractères</small>
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <button onclick="copyText()" class="btn-primary" style="background-color: #2563eb;">Copier</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function generateMessage() {
+        const candidatureId = document.getElementById('candidature_id').value;
+        const extraContext = document.getElementById('extra_context').value;
+        const generateBtn = document.getElementById('generate-btn');
+        const loading = document.getElementById('loading');
+        const resultArea = document.getElementById('result-area');
+
+        generateBtn.disabled = true;
+        loading.style.display = 'block';
+        resultArea.style.display = 'none';
+
+        fetch('/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                candidature_id: candidatureId,
+                extra_context: extraContext
+            }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+                resultArea.style.display = 'block';
+
+                document.getElementById('result-subject').value = data.objet;
+                document.getElementById('result-body').value = data.corps;
+                updateCharCount();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+                alert('Erreur lors de la génération');
+            });
+    }
+
+    function updateCharCount() {
+        var text = document.getElementById("result-body").value;
+        document.getElementById("char-count").textContent = text.length + " caractères";
+    }
+
+    document.getElementById("result-body").addEventListener("input", updateCharCount);
+
+    function copyText() {
+        var subject = document.getElementById("result-subject").value;
+        var body = document.getElementById("result-body").value;
+        var fullText = "Objet: " + subject + "\n\n" + body;
+
+        navigator.clipboard.writeText(fullText).then(function () {
+            alert("Copié dans le presse-papier !");
+        }, function (err) {
+            console.error('Async: Could not copy text: ', err);
+        });
+    }
+</script>
+{% endblock %}

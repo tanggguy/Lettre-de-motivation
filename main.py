@@ -374,6 +374,31 @@ def select_template_by_tone(job_info):
     return "lettre_template_moderne.tex"
 
 
+def generate_pdf_from_content(user_config, template_content, entreprise, poste, letter_body, output_filename_base):
+    """Génère le PDF à partir du contenu fourni."""
+    final_tex_content = template_content
+    for key, value in user_config.items():
+        if isinstance(value, list):
+            value = ", ".join(value)
+        final_tex_content = final_tex_content.replace(f"%%{key.upper()}%%", str(value))
+
+    final_tex_content = final_tex_content.replace("%%CORPS_LETTRE%%", letter_body)
+    final_tex_content = final_tex_content.replace("%%POSTE_VISE%%", poste)
+    final_tex_content = final_tex_content.replace("%%NOM_ENTREPRISE%%", entreprise)
+    final_tex_content = final_tex_content.replace(
+        "%%ADRESSE_ENTREPRISE%%", "Adresse de l'entreprise"
+    )
+
+    tex_filepath = os.path.join("output", f"{output_filename_base}.tex")
+    pdf_filepath = os.path.join("output", f"{output_filename_base}.pdf")
+
+    with open(tex_filepath, "w", encoding="utf-8") as f:
+        f.write(final_tex_content)
+
+    success = compile_latex_to_pdf(tex_filepath)
+    return success, pdf_filepath, tex_filepath
+
+
 def create_cover_letter(
     user_config, job_ad_path, templates_dict, custom_instructions=None
 ):
@@ -409,6 +434,8 @@ def create_cover_letter(
         "tex_path": None,
         "job_info": job_info,
         "match_info": match_info,
+        "letter_body": None,
+        "template_name": template_name
     }
 
     letter_body = generate_letter_body(
@@ -420,20 +447,12 @@ def create_cover_letter(
     if not letter_body:
         return result
 
-    final_tex_content = template_content
-    for key, value in user_config.items():
-        if isinstance(value, list):
-            value = ", ".join(value)
-        final_tex_content = final_tex_content.replace(f"%%{key.upper()}%%", str(value))
-
-    final_tex_content = final_tex_content.replace("%%CORPS_LETTRE%%", letter_body)
+    result["letter_body"] = letter_body
 
     if job_info:
         poste = job_info.get("poste", "Candidature")
         entreprise = job_info.get("entreprise", "Nom de l'entreprise")
-        final_tex_content = final_tex_content.replace("%%POSTE_VISE%%", poste)
-        final_tex_content = final_tex_content.replace("%%NOM_ENTREPRISE%%", entreprise)
-
+        
         poste_clean = (
             poste.replace("-", "")
             .replace(" ", "_")
@@ -449,25 +468,14 @@ def create_cover_letter(
             .replace("annonce", "")
             .strip()
         )
-        final_tex_content = final_tex_content.replace(
-            "%%POSTE_VISE%%", base_name.title()
-        )
-        final_tex_content = final_tex_content.replace(
-            "%%NOM_ENTREPRISE%%", "Nom de l'entreprise"
-        )
+        poste = base_name.title()
+        entreprise = "Nom de l'entreprise"
         output_filename_base = f"lettre_motivation_{base_name.replace(' ', '_')}"
 
-    final_tex_content = final_tex_content.replace(
-        "%%ADRESSE_ENTREPRISE%%", "Adresse de l'entreprise"
+    success, pdf_filepath, tex_filepath = generate_pdf_from_content(
+        user_config, template_content, entreprise, poste, letter_body, output_filename_base
     )
 
-    tex_filepath = os.path.join("output", f"{output_filename_base}.tex")
-    pdf_filepath = os.path.join("output", f"{output_filename_base}.pdf")
-
-    with open(tex_filepath, "w", encoding="utf-8") as f:
-        f.write(final_tex_content)
-
-    success = compile_latex_to_pdf(tex_filepath)
     json_export = user_config.get("json_export", False)
     if success and job_info and json_export:
         save_job_metadata(job_info, match_info, pdf_filepath)
@@ -477,8 +485,6 @@ def create_cover_letter(
             "success": bool(success),
             "pdf_path": pdf_filepath if success else None,
             "tex_path": tex_filepath,
-            "job_info": job_info,
-            "match_info": match_info,
         }
     )
 

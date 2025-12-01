@@ -37,6 +37,12 @@
                         <span class="label">Statistiques</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ url_for('messages') }}"
+                        class="nav-item {% if request.endpoint == 'messages' %}active{% endif %}">
+                        <span class="label">Messages</span>
+                    </a>
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <p>&copy; 2025 GenLetter</p>

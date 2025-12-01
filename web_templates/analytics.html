@@ -37,9 +37,16 @@
 
     .charts-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(1000px, 1fr));
         gap: 20px;
         margin-bottom: 30px;
+    }
+
+    .charts-container .chart-card:last-child {
+        height: 700px;
+        /* Augmente la hauteur pour ce graphique uniquement */
+        /* Optionnel : changer la couleur de fond pour vérifier que ça marche */
+        /* background: #a82323; */
     }
 
     .chart-card {
@@ -47,6 +54,7 @@
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        height: 500px;
     }
 
     .header-actions {
@@ -113,6 +121,8 @@
     Plotly.newPlot('heatmap-chart', heatmapGraph.data, heatmapGraph.layout);
 
     var wordcloudGraph = {{ graph_wordcloud_json | safe }};
+    // On force aussi l'autosize dans le layout au cas où
+    wordcloudGraph.layout.autosize = true;
     Plotly.newPlot('wordcloud-chart', wordcloudGraph.data, wordcloudGraph.layout);
 </script>
 {% endblock %}

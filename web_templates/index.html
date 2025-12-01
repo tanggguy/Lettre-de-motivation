@@ -52,6 +52,38 @@
 {% if status %}
 <section class="card results">
   <h2>Résultats</h2>
+
+  {% if status == 'success' %}
+  <div class="result-block"
+    style="margin-bottom: 20px; padding: 15px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;">
+    <h3>Modifier et Régénérer</h3>
+    <form action="{{ url_for('regenerate') }}" method="POST">
+      <input type="hidden" name="candidature_id" value="{{ candidature_id }}">
+      <input type="hidden" name="template_name" value="{{ template_name }}">
+
+      <div class="form-group">
+        <label for="entreprise">Nom de l'entreprise</label>
+        <input type="text" id="entreprise" name="entreprise" value="{{ job_info.entreprise if job_info else '' }}"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label for="poste">Poste visé</label>
+        <input type="text" id="poste" name="poste" value="{{ job_info.poste if job_info else '' }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="corps_lettre">Corps de la lettre (LaTeX supporté)</label>
+        <textarea id="corps_lettre" name="corps_lettre" rows="15" required>{{ letter_body }}</textarea>
+      </div>
+
+      <div class="actions">
+        <button type="submit" style="background-color: #f59e0b;">Régénérer le PDF</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
   {% if job_info %}
   <div class="result-block">
     <h3>Annonce analysée</h3>

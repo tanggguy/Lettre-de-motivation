@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
 from werkzeug.utils import secure_filename
 
-from main import load_config, create_cover_letter
+from main import load_config, create_cover_letter, generate_pdf_from_content
 import gmail_utils
 import json
 import plotly
@@ -94,6 +94,9 @@ def render_home(
     match_info=None,
     job_info=None,
     form_data=None,
+    letter_body=None,
+    template_name=None,
+    candidature_id=None
 ):
     """Centralise le rendu de la page d'accueil."""
     return render_template(
@@ -104,6 +107,9 @@ def render_home(
         match_info=match_info or {},
         job_info=job_info or {},
         form_data=form_data or {"job_text": "", "custom_prompt": ""},
+        letter_body=letter_body,
+        template_name=template_name,
+        candidature_id=candidature_id
     )
 
 
@@ -196,6 +202,9 @@ def generate():
             match_info=result.get("match_info"),
             job_info=result.get("job_info"),
             form_data={"job_text": "", "custom_prompt": custom_prompt},
+            letter_body=result.get("letter_body"),
+            template_name=result.get("template_name"),
+            candidature_id=nouvelle_candidature.id
         )
 
     return render_home(
@@ -205,6 +214,90 @@ def generate():
         job_info=result.get("job_info") if result else None,
         form_data=form_defaults,
     )
+
+
+@app.route("/regenerate", methods=["POST"])
+def regenerate():
+    """Régénère le PDF avec les modifications manuelles."""
+    entreprise = request.form.get("entreprise")
+    poste = request.form.get("poste")
+    corps_lettre = request.form.get("corps_lettre")
+    candidature_id = request.form.get("candidature_id")
+    template_name = request.form.get("template_name")
+
+    if not all([entreprise, poste, corps_lettre, template_name]):
+        return render_home(status="error", message="Données manquantes pour la régénération.")
+
+    template_content = TEMPLATES_DICT.get(template_name, TEMPLATES_DICT["lettre_template.tex"])
+    
+    # Nettoyage pour le nom de fichier
+    poste_clean = (
+        poste.replace("-", "")
+        .replace(" ", "_")
+        .replace("/", "_")
+        .replace("\\", "_")
+    )
+    entreprise_clean = entreprise.replace(" ", "_")
+    output_filename_base = f"lettre_motivation_{entreprise_clean}_{poste_clean}"
+
+    try:
+        success, pdf_filepath, tex_filepath = generate_pdf_from_content(
+            USER_CONFIG, template_content, entreprise, poste, corps_lettre, output_filename_base
+        )
+    except Exception as exc:
+         return render_home(status="error", message=f"Erreur lors de la régénération : {exc}")
+
+    if success:
+        pdf_filename = os.path.basename(pdf_filepath)
+        
+        # Mise à jour ou création en base
+        if candidature_id:
+            candidature = Candidature.query.get(candidature_id)
+            if candidature:
+                candidature.entreprise = entreprise
+                candidature.poste = poste
+                candidature.fichier_pdf = pdf_filename
+                # On ne change pas le statut
+                db.session.commit()
+            else:
+                 # ID fourni mais introuvable (cas rare), on crée
+                candidature = Candidature(
+                    entreprise=entreprise,
+                    poste=poste,
+                    fichier_pdf=pdf_filename,
+                    statut="En préparation"
+                )
+                db.session.add(candidature)
+                db.session.commit()
+                candidature_id = candidature.id
+        else:
+            # Pas d'ID, on crée
+            candidature = Candidature(
+                entreprise=entreprise,
+                poste=poste,
+                fichier_pdf=pdf_filename,
+                statut="En préparation"
+            )
+            db.session.add(candidature)
+            db.session.commit()
+            candidature_id = candidature.id
+
+        return render_home(
+            status="success",
+            message="Lettre régénérée avec succès.",
+            pdf_filename=pdf_filename,
+            # On ne peut pas facilement récupérer match_info/job_info d'origine ici sans les repasser
+            # Pour l'instant on laisse vide ou on pourrait les stocker en hidden fields si nécessaire
+            # Mais l'utilisateur a juste demandé de pouvoir modifier et régénérer.
+            form_data={"job_text": "", "custom_prompt": ""},
+            letter_body=corps_lettre,
+            template_name=template_name,
+            candidature_id=candidature_id,
+            job_info={"entreprise": entreprise, "poste": poste} # Pour l'affichage
+        )
+    
+    return render_home(status="error", message="Échec de la régénération.")
+
 
 
 @app.route("/download/<path:filename>", methods=["GET"])
@@ -287,6 +380,76 @@ def generate_email_content(candidature, user_config):
         return response.text.strip()
     except Exception as e:
         return f"Madame, Monsieur,\n\nJe vous adresse ma candidature spontanée pour un stage au sein de {candidature.entreprise}.\nVous trouverez ci-joint mon CV et ma Lettre de motivation, détaillant mon profil et mon intérêt.\n\nJe me tiens à votre disposition pour tout échange.\n\nCordialement,\n{user_config.get('nom_complet', '')}"
+
+
+def generate_linkedin_message_content(candidature, user_config, extra_context=None):
+    """Génère un message LinkedIn d'accroche via Gemini."""
+    
+    company = candidature.entreprise if candidature else "l'entreprise cible"
+    role = candidature.poste if candidature else "le poste visé"
+    
+    context_str = ""
+    if extra_context:
+        context_str = f"\n    **Contexte supplémentaire :**\n    {extra_context}\n"
+
+    prompt = f"""
+    {user_config.get('linkedin_prompt_template', '')}
+    **Informations :**
+    - Candidat : {user_config.get('nom_complet', 'Étudiant')}
+    - Entreprise cible : {company}
+    - Poste visé : {role}
+    {context_str}
+    
+    Retourne la réponse au format JSON :
+    {{
+        "objet": "Objet du message",
+        "corps": "Corps du message"
+    }}
+    """
+    
+    try:
+        model = genai.GenerativeModel("gemini-flash-latest")
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        # Nettoyage Markdown json
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return json.loads(text.strip())
+    except Exception as e:
+        return {
+            "objet": "Demande de conseil",
+            "corps": f"Bonjour, étudiant à IMT Nord Europe, je m'intéresse beaucoup à votre parcours. Auriez-vous 10min mercredi 3 décembre pour échanger ? Cordialement."
+        }
+
+
+@app.route("/generate_linkedin/<int:id>", methods=["POST"])
+def generate_linkedin_route(id):
+    candidature = Candidature.query.get_or_404(id)
+    result = generate_linkedin_message_content(candidature, USER_CONFIG)
+    return result
+
+
+@app.route("/messages", methods=["GET", "POST"])
+def messages():
+    if request.method == "POST":
+        data = request.get_json()
+        candidature_id = data.get("candidature_id")
+        extra_context = data.get("extra_context")
+        
+        candidature = None
+        if candidature_id:
+            candidature = Candidature.query.get(candidature_id)
+            
+        result = generate_linkedin_message_content(candidature, USER_CONFIG, extra_context)
+        return result
+        
+    # GET
+    candidatures = Candidature.query.order_by(Candidature.date_creation.desc()).all()
+    return render_template("messages.html", candidatures=candidatures)
 
 
 @app.route("/create_draft/<int:id>", methods=["POST"])
@@ -525,7 +688,7 @@ def analytics():
         yaxis_title='Nombre',
         template='plotly_white',
         margin=dict(l=20, r=20, t=40, b=20),
-        height=300
+        height=400
     )
     graph_daily_json = json.dumps(fig_daily, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -545,7 +708,7 @@ def analytics():
         yaxis_title='Total Candidatures',
         template='plotly_white',
         margin=dict(l=20, r=20, t=40, b=20),
-        height=300
+        height=400
     )
     graph_cumulative_json = json.dumps(fig_cumulative, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -568,7 +731,7 @@ def analytics():
         title='Entonnoir de Conversion',
         template='plotly_white',
         margin=dict(l=20, r=20, t=40, b=20),
-        height=300
+        height=400
     )
     graph_funnel_json = json.dumps(fig_funnel, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -593,7 +756,7 @@ def analytics():
         yaxis_title='Candidatures',
         template='plotly_white',
         margin=dict(l=20, r=20, t=40, b=20),
-        height=300
+        height=400
     )
     graph_heatmap_json = json.dumps(fig_heatmap, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -605,7 +768,7 @@ def analytics():
     all_text = " ".join([c.poste for c in candidatures]).lower()
     # Nettoyage basique
     words = re.findall(r'\w+', all_text)
-    stopwords = {'de', 'et', 'le', 'la', 'les', 'un', 'une', 'pour', 'en', 'à', 'au', 'du', 'des', 'stage', 'alternance', 'cdi', 'cdd'} 
+    stopwords = {'de', 'et', 'le', 'la', 'les', 'un', 'une', 'pour', 'en', 'à', 'au', 'du', 'des','sur','stage', 'alternance', 'cdi', 'cdd','candidature','spontanée', 'bureau', 'ingénieur', 'ingénieure', 'ingenieur','études','étude','assistant','stagiaire'} 
     # On garde 'stage'/'alternance' ou pas ? L'utilisateur a dit "Basé sur les titres", souvent "Stage Data Scientist". 
     # Si on enlève 'stage', on voit mieux la techno. Gardons 'stage' dans stopwords pour voir les métiers.
     
@@ -648,7 +811,7 @@ def analytics():
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             template='plotly_white',
             margin=dict(l=20, r=20, t=40, b=20),
-            height=300
+            height=600
         )
     else:
         fig_wordcloud = go.Figure()

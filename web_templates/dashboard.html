@@ -99,6 +99,8 @@
           {% endif %}
           <button onclick="openEmailModal('{{ cand.id }}', '{{ cand.entreprise }}', '{{ cand.poste }}')"
             class="card-action-btn" title="Email">✉️</button>
+          <button onclick="openLinkedinModal('{{ cand.id }}', '{{ cand.entreprise }}', '{{ cand.poste }}')"
+            class="card-action-btn" title="LinkedIn">👔</button>
           <a href="{{ url_for('delete_candidature', id=cand.id) }}" onclick="return confirm('Supprimer ?');"
             class="card-action-btn delete" title="Supprimer">🗑️</a>
         </div>
@@ -173,6 +175,35 @@
     </form>
   </div>
 </div>
+
+<!-- LinkedIn Modal -->
+<div id="linkedinModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeLinkedinModal()">&times;</span>
+    <h2>Message LinkedIn</h2>
+    <p id="linkedin-subtitle" class="text-muted"></p>
+
+    <div id="linkedin-loading" style="display: none; text-align: center; padding: 20px;">
+      <p>Génération en cours avec Gemini...</p>
+    </div>
+
+    <div id="linkedin-result" style="display: none;">
+      <div class="form-group">
+        <label for="linkedin-subject">Objet :</label>
+        <input type="text" id="linkedin-subject" readonly style="width: 100%; padding: 8px; margin-bottom: 10px;">
+      </div>
+      <div class="form-group">
+        <label for="linkedin-body">Message :</label>
+        <textarea id="linkedin-body" rows="6" style="width: 100%; padding: 8px;"></textarea>
+        <small id="char-count" class="text-muted" style="float: right;">0 caractères</small>
+      </div>
+
+      <div style="text-align: right; margin-top: 20px;">
+        <button onclick="copyLinkedinText()" class="btn-primary" style="background-color: #2563eb;">Copier</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -245,11 +276,15 @@
   window.onclick = function (event) {
     var emailModal = document.getElementById("emailModal");
     var manualModal = document.getElementById("manualModal");
+    var linkedinModal = document.getElementById("linkedinModal");
     if (event.target == emailModal) {
       emailModal.style.display = "none";
     }
     if (event.target == manualModal) {
       manualModal.style.display = "none";
+    }
+    if (event.target == linkedinModal) {
+      linkedinModal.style.display = "none";
     }
   }
 
@@ -264,6 +299,57 @@
 
   function closeManualModal() {
     document.getElementById("manualModal").style.display = "none";
+  }
+
+  // LinkedIn Modal Logic
+  function openLinkedinModal(id, entreprise, poste) {
+    var modal = document.getElementById("linkedinModal");
+    var subtitle = document.getElementById("linkedin-subtitle");
+    var loading = document.getElementById("linkedin-loading");
+    var result = document.getElementById("linkedin-result");
+
+    subtitle.textContent = "Pour : " + poste + " chez " + entreprise;
+    modal.style.display = "block";
+    loading.style.display = "block";
+    result.style.display = "none";
+
+    // Call API
+    fetch('/generate_linkedin/' + id, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        loading.style.display = "none";
+        result.style.display = "block";
+        document.getElementById("linkedin-subject").value = data.objet;
+        document.getElementById("linkedin-body").value = data.corps;
+        updateCharCount();
+      })
+      .catch(err => {
+        loading.style.display = "none";
+        alert("Erreur lors de la génération : " + err);
+      });
+  }
+
+  function closeLinkedinModal() {
+    document.getElementById("linkedinModal").style.display = "none";
+  }
+
+  function updateCharCount() {
+    var text = document.getElementById("linkedin-body").value;
+    document.getElementById("char-count").textContent = text.length + " caractères";
+  }
+
+  document.getElementById("linkedin-body").addEventListener("input", updateCharCount);
+
+  function copyLinkedinText() {
+    var subject = document.getElementById("linkedin-subject").value;
+    var body = document.getElementById("linkedin-body").value;
+    var fullText = "Objet: " + subject + "\n\n" + body;
+
+    navigator.clipboard.writeText(fullText).then(function () {
+      alert("Copié dans le presse-papier !");
+    }, function (err) {
+      console.error('Async: Could not copy text: ', err);
+    });
   }
 </script>
 {% endblock %}
