@@ -13,6 +13,10 @@ import json
 import plotly
 import plotly.graph_objs as go
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
+import csv
+import io
+from flask import Response, flash
+
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -368,6 +372,121 @@ def add_manual():
     )
     db.session.add(new_candidature)
     db.session.commit()
+    return redirect(url_for('dashboard'))
+
+
+@app.route("/export_db")
+def export_db():
+    """Exporte la base de données en CSV."""
+    candidatures = Candidature.query.all()
+    
+    # Création d'un buffer en mémoire
+    output = io.StringIO()
+    # Ajout du BOM pour qu'Excel reconnaisse l'UTF-8 automatiquement
+    output.write('\ufeff')
+    writer = csv.writer(output)
+    
+    # En-têtes
+    headers = ["id", "entreprise", "poste", "statut", "date_creation", "url_offer", "notes"]
+    writer.writerow(headers)
+    
+    # Données
+    for c in candidatures:
+        writer.writerow([
+            c.id,
+            c.entreprise,
+            c.poste,
+            c.statut,
+            c.date_creation.strftime('%Y-%m-%d %H:%M:%S') if c.date_creation else "",
+            c.url_offer,
+            c.notes
+        ])
+        
+    output.seek(0)
+    
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=candidatures.csv"}
+    )
+
+
+@app.route("/import_db", methods=["POST"])
+def import_db():
+    """Importe un fichier CSV pour mettre à jour la base de données."""
+    if 'file' not in request.files:
+        return redirect(url_for('dashboard'))
+        
+    file = request.files['file']
+    if file.filename == '':
+        return redirect(url_for('dashboard'))
+
+    if file:
+        stream = None
+        # Tentative avec UTF-8 (standard)
+        try:
+            stream = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
+        except UnicodeDecodeError:
+            # Si échec, tentative avec cp1252 (Excel Windows par défaut)
+            file.stream.seek(0)
+            try:
+                stream = io.StringIO(file.stream.read().decode("cp1252"), newline=None)
+            except UnicodeDecodeError:
+                 # Dernier recours : latin-1
+                file.stream.seek(0)
+                stream = io.StringIO(file.stream.read().decode("latin-1"), newline=None)
+
+        if stream:
+            try:
+                csv_input = csv.reader(stream)
+                
+                headers = next(csv_input) # Skip headers
+                # Vérification basique des headers si besoin, mais on va supposer que l'utilisateur utilise le format d'export
+                
+                updated_count = 0
+                
+                for row in csv_input:
+                    # On s'attend à : id, entreprise, poste, statut, date_creation, url_offer, notes
+                    if len(row) < 7:
+                        continue
+                        
+                    c_id = row[0].strip()
+                    
+                    if not c_id:
+                        # Création d'une nouvelle candidature
+                        try:
+                            date_creation = datetime.strptime(row[4], '%Y-%m-%d %H:%M:%S') if row[4] else datetime.now()
+                        except ValueError:
+                            date_creation = datetime.now()
+
+                        new_candidature = Candidature(
+                            entreprise=row[1],
+                            poste=row[2],
+                            statut=row[3],
+                            date_creation=date_creation,
+                            url_offer=row[5],
+                            notes=row[6]
+                        )
+                        db.session.add(new_candidature)
+                        updated_count += 1
+                    else:
+                        # Mise à jour existante
+                        candidature = Candidature.query.get(c_id)
+                        
+                        if candidature:
+                            candidature.entreprise = row[1]
+                            candidature.poste = row[2]
+                            candidature.statut = row[3]
+                            # On ne touche pas à date_creation pour une mise à jour sauf si besoin
+                            candidature.url_offer = row[5]
+                            candidature.notes = row[6]
+                            updated_count += 1
+                
+                db.session.commit()
+            
+            except Exception as e:
+                print(f"Erreur lors de l'import : {e}")
+            
     return redirect(url_for('dashboard'))
 
 
